@@ -13,7 +13,7 @@ class RouteController extends GetxController {
 
   // Função para centralizar a câmera na rota
   void centerCameraOnRoute(LatLngBounds bounds) async {
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 500));
     if (mapController.value != null) {
       mapController.value!.animateCamera(
         CameraUpdate.newLatLngBounds(bounds, 50.0), // Padding ajustável
@@ -52,5 +52,17 @@ class RouteController extends GetxController {
   void onMapCreated(GoogleMapController controller) {
     mapController.value = controller;
     isMapReady.value = true;
+  }
+
+  // Função para solicitar corrida
+  void solicitarCorrida() {
+    // Adicione aqui a lógica para solicitar a corrida,
+    // como chamar uma API ou acionar o serviço correspondente.
+    Get.snackbar(
+      'Solicitação Enviada',
+      'A corrida foi solicitada com sucesso!',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 3),
+    );
   }
 }
