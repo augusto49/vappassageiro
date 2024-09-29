@@ -68,7 +68,7 @@ class RouteView extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () {
                         // Função para solicitar a corrida
-                        _solicitarCorrida();
+                        _routeController.solicitarCorrida();
                       },
                       child: const Text('Solicitar Corrida'),
                     ),
@@ -80,9 +80,5 @@ class RouteView extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  void _solicitarCorrida() {
-    // Lógica de solicitação da corrida
   }
 }

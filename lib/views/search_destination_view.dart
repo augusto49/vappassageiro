@@ -34,35 +34,9 @@ class SearchDestinationView extends StatelessWidget {
               onChanged: (value) {
                 // Atualiza as sugestões de locais de partida
                 _searchController.getAutocompleteSuggestions(value);
+                _searchController.showingOriginSuggestions.value = true;
               },
             ),
-            const SizedBox(height: 16),
-
-            // Sugestões de locais de partida
-            Obx(() {
-              if (_searchController.originSuggestions.isEmpty) {
-                return const SizedBox.shrink();
-              }
-              return Expanded(
-                child: ListView.builder(
-                  itemCount: _searchController.originSuggestions.length,
-                  itemBuilder: (context, index) {
-                    final suggestion =
-                        _searchController.originSuggestions[index];
-                    return ListTile(
-                      title: Text(suggestion['description']),
-                      onTap: () {
-                        // Seleciona o local de origem
-                        _searchController.originController.text =
-                            suggestion['description'];
-                        _searchController.originSuggestions.clear();
-                      },
-                    );
-                  },
-                ),
-              );
-            }),
-
             const SizedBox(height: 16),
 
             // Campo "Para onde?" (Destino)
@@ -83,53 +57,85 @@ class SearchDestinationView extends StatelessWidget {
                 // Atualiza as sugestões de locais de destino
                 _searchController.getAutocompleteSuggestions(value,
                     isDestination: true);
+                _searchController.showingOriginSuggestions.value = false;
               },
             ),
+            const SizedBox(height: 16),
 
-            // Sugestões de locais de destino
+            // Exibe "Carregando..." durante a busca de sugestões
             Obx(() {
-              if (_searchController.destinationSuggestions.isEmpty) {
+              if (_searchController.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final suggestions =
+                  _searchController.showingOriginSuggestions.value
+                      ? _searchController.originSuggestions
+                      : _searchController.destinationSuggestions;
+
+              if (suggestions.isEmpty) {
                 return const SizedBox.shrink();
               }
               return Expanded(
                 child: ListView.builder(
-                  itemCount: _searchController.destinationSuggestions.length,
+                  itemCount: suggestions.length,
                   itemBuilder: (context, index) {
-                    final suggestion =
-                        _searchController.destinationSuggestions[index];
+                    final suggestion = suggestions[index];
                     return ListTile(
                       leading: const Icon(Icons.location_on),
                       title: Text(suggestion['description']),
                       onTap: () {
-                        // Seleciona o local de destino
-                        _searchController.destinationController.text =
-                            suggestion['description'];
-                        _searchController.destinationSuggestions.clear();
+                        // Atualiza o campo correto com a seleção
+                        if (_searchController.showingOriginSuggestions.value) {
+                          _searchController.originController.text =
+                              suggestion['description'];
+                          _searchController.originSuggestions.clear();
+                        } else {
+                          _searchController.destinationController.text =
+                              suggestion['description'];
+                          _searchController.destinationSuggestions.clear();
+                        }
                       },
                     );
                   },
                 ),
               );
             }),
-            // Botão "Avançar"
+            const SizedBox(height: 16),
+            // Espaçador para empurrar o botão para baixo
+            const Spacer(),
+
+            // Botão "Avançar" só aparece quando ambos os campos são definidos
             Obx(() {
-              return ElevatedButton(
-                onPressed: _searchController.canProceed.value
-                    ? () async {
-                        // Desenhar a rota e pegar as informações
+              // Verifica se a rota está sendo carregada
+              if (_searchController.isRouteLoading.value) {
+                return const Column(
+                  children: [
+                    CircularProgressIndicator(), // Indicador de carregamento
+                    SizedBox(height: 8),
+                    Text('Carregando a rota...'), // Mensagem de carregamento
+                  ],
+                );
+              }
+
+              // Exibe o botão "Avançar" apenas quando a origem e o destino estiverem definidos
+              return _searchController.canProceed.value
+                  ? ElevatedButton(
+                      onPressed: () async {
+                        // Inicia o carregamento da rota
                         await _searchController.drawRoute();
 
-                        // Navegar para a RouteView passando as informações da rota usando a rota nomeada
+                        // Navega para a tela da rota passando as informações
                         Get.toNamed('/route', arguments: {
                           'distance': _searchController.routeInfo['distance'],
                           'duration': _searchController.routeInfo['duration'],
                           'price': _searchController.routeInfo['price'],
                         });
-                      }
-                    : null, // Desabilitado até que tanto origem quanto destino estejam selecionados
-                child: const Text('Avançar'),
-              );
-            }),
+                      },
+                      child: const Text('Avançar'),
+                    )
+                  : const SizedBox.shrink();
+            })
           ],
         ),
       ),

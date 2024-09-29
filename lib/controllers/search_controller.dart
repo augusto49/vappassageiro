@@ -16,6 +16,10 @@ class SearchController extends GetxController {
   final TextEditingController originController = TextEditingController();
   final TextEditingController destinationController = TextEditingController();
 
+  // Variável para controlar o estado de carregamento da rota
+  var isRouteLoading = false.obs;
+  var isLoading = false.obs;
+  var showingOriginSuggestions = true.obs;
   // Lista de sugestões de autocomplete para origem e destino
   var originSuggestions = <Map<String, dynamic>>[].obs;
   var destinationSuggestions = <Map<String, dynamic>>[].obs;
@@ -89,6 +93,8 @@ class SearchController extends GetxController {
 
   // Função para traçar a rota usando a Google Directions API
   Future<void> drawRoute() async {
+    // Iniciar o carregamento da rota
+    isRouteLoading.value = true;
     final origin = originController.text;
     final destination = destinationController.text;
 
@@ -101,6 +107,7 @@ class SearchController extends GetxController {
         'Não foi possível obter as coordenadas para a origem ou destino.',
         snackPosition: SnackPosition.BOTTOM,
       );
+      isRouteLoading.value = false;
       return;
     }
 
@@ -152,6 +159,8 @@ class SearchController extends GetxController {
         'Não foi possível calcular a rota.',
         snackPosition: SnackPosition.BOTTOM,
       );
+    } finally {
+      isRouteLoading.value = false;
     }
   }
 
