@@ -10,6 +10,7 @@ class RouteController extends GetxController {
   final RxString routePrice = ''.obs;
   final RxBool isMapReady = false.obs;
   final Rx<GoogleMapController?> mapController = Rx<GoogleMapController?>(null);
+  final Rx<Set<Marker>> markers = Rx<Set<Marker>>({});
 
   // Função para centralizar a câmera na rota
   void centerCameraOnRoute(LatLngBounds bounds) async {
@@ -22,7 +23,7 @@ class RouteController extends GetxController {
   }
 
   // Função para configurar a polyline no mapa
-  void setPolyline(String encodedPolyline) {
+  void setPolyline(String encodedPolyline, LatLng origin, LatLng destination) {
     PolylinePoints polylinePoints = PolylinePoints();
     List<PointLatLng> result = polylinePoints.decodePolyline(encodedPolyline);
 
@@ -39,6 +40,41 @@ class RouteController extends GetxController {
     );
 
     polylines.value = {polyline};
+
+    // Adiciona marcadores de origem e destino
+    markers.value = {
+      Marker(
+        markerId: const MarkerId('origin'),
+        position: origin,
+        infoWindow: const InfoWindow(title: 'Origem'),
+      ),
+      Marker(
+        markerId: const MarkerId('destination'),
+        position: destination,
+        infoWindow: const InfoWindow(title: 'Destino'),
+      ),
+    };
+
+    // Centraliza a câmera para cobrir toda a rota
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(
+        origin.latitude < destination.latitude
+            ? origin.latitude
+            : destination.latitude,
+        origin.longitude < destination.longitude
+            ? origin.longitude
+            : destination.longitude,
+      ),
+      northeast: LatLng(
+        origin.latitude > destination.latitude
+            ? origin.latitude
+            : destination.latitude,
+        origin.longitude > destination.longitude
+            ? origin.longitude
+            : destination.longitude,
+      ),
+    );
+    centerCameraOnRoute(bounds);
   }
 
   // Método para atualizar as informações da rota
