@@ -35,7 +35,8 @@ class SearchController extends GetxController {
   void onInit() {
     super.onInit();
     // Preencher o campo "De onde?" com o endereço atual
-    originController.text = _homeController.currentAddress.value;
+    _loadCurrentAddress();
+
     // Atualizar o campo automaticamente se o endereço mudar
     ever(_homeController.currentAddress, (address) {
       originController.text = address;
@@ -43,6 +44,63 @@ class SearchController extends GetxController {
 
     originController.addListener(_updateCanProceed);
     destinationController.addListener(_updateCanProceed);
+  }
+
+  Future<void> _loadCurrentAddress() async {
+    // Verifique se a posição atual está disponível
+    if (_homeController.currentPosition.value != null) {
+      final lat = _homeController.currentPosition.value.latitude;
+      final lng = _homeController.currentPosition.value.longitude;
+
+      // Use a geocoding para obter o endereço a partir da posição
+      final addressList = await placemarkFromCoordinates(lat, lng);
+      if (addressList.isNotEmpty) {
+        final address = addressList.first;
+
+        // Formatar o endereço completo
+        String fullAddress = '';
+
+        // Mapeamento de abreviações
+        Map<String, String> abbreviations = {
+          'Avenida': 'Av.',
+          'Rua': 'R.',
+          'Travessa': 'Tv.',
+          'Estrada': 'Est.',
+          'Praça': 'Pça.',
+          // Adicione mais abreviações conforme necessário
+        };
+
+        // Função para substituir termos por abreviações
+        String abbreviate(String street) {
+          for (var entry in abbreviations.entries) {
+            street = street.replaceAll(entry.key, entry.value);
+          }
+          return street;
+        }
+
+        if (address.thoroughfare != null) {
+          fullAddress += abbreviate(address.thoroughfare!); // Logradouro
+        }
+        if (address.subThoroughfare != null) {
+          fullAddress += ', ${address.subThoroughfare!}'; // Número
+        }
+        if (address.subLocality != null) {
+          fullAddress += ' - ${address.subLocality!}'; // Bairro
+        }
+        if (address.locality != null) {
+          fullAddress += ' - ${address.locality!}'; // Cidade
+        }
+        if (address.administrativeArea != null) {
+          fullAddress += ' ${address.administrativeArea!}'; // Estado
+        }
+        if (address.country != null) {
+          fullAddress += ' - ${address.country!}'; // País
+        }
+
+        // Atribuir o endereço formatado ao controller
+        originController.text = fullAddress;
+      }
+    }
   }
 
   // Função que verifica se o botão "Avançar" pode ser habilitado
@@ -143,7 +201,11 @@ class SearchController extends GetxController {
       };
 
       // Traçar a rota no mapa usando a polyline codificada
-      _routeController.setPolyline(encodedPolyline);
+      _routeController.setPolyline(
+        encodedPolyline,
+        LatLng(originCoords['lat']!, originCoords['lng']!), // Origem
+        LatLng(destinationCoords['lat']!, destinationCoords['lng']!), // Destino
+      );
 
       // Centralizar a câmera na rota
       _routeController.centerCameraOnRoute(bounds);

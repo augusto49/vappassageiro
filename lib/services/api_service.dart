@@ -10,7 +10,7 @@ import '../utils/storage_util.dart';
 
 class ApiService {
   final dio.Dio _dio = dio.Dio();
-  final String baseUrl = 'http://192.168.3.74:8000/';
+  final String baseUrl = 'http://192.168.141.53:8000/';
 
   ApiService() {
     _dio.options.baseUrl = baseUrl;

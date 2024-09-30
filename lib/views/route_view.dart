@@ -26,6 +26,7 @@ class RouteView extends StatelessWidget {
                 ),
                 onMapCreated: _routeController.onMapCreated,
                 polylines: _routeController.polylines.value,
+                markers: _routeController.markers.value,
                 myLocationEnabled: true,
                 myLocationButtonEnabled: false,
                 zoomControlsEnabled: false,
