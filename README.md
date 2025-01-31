@@ -1,1 +1,1 @@
-Aplicativo do lado do passageiro integrado com bakcend em python
+Aplicativo do lado do passageiro integrado com backend em python
